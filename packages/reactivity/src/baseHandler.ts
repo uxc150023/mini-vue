@@ -1,4 +1,6 @@
+import { isObject } from "@vue/shared";
 import { activeEffect, track, trigger } from "./effect";
+import { reactive } from "./reactive";
 
 export const enum ReactiveFlags {
   IS_REACTIVE = "__v_isReactive", // 被代理的标记
@@ -12,7 +14,11 @@ export const mutableHandlers = {
     track(target, "get", key);
     // receiver 会将this指向到代理对象，继续触发get
     // 如果用return target[key], 会终止触发get
-    return Reflect.get(target, key, receiver);
+    let res = Reflect.get(target, key, receiver);
+    if (isObject(res)) {
+      return reactive(res);
+    }
+    return res;
   },
   set(target, key, value, receiver) {
     // 去代理对象proxy上设置值
