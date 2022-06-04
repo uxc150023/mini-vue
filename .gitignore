@@ -1,0 +1,5 @@
+/.awcache/
+/dist/
+/node_modules/
+/dll
+/debug.log

@@ -1,0 +1,39 @@
+{
+  // ===========================================
+  // ================ Eslint ===================
+  // ===========================================
+  "eslint.alwaysShowStatus": true,
+  "eslint.options": {
+    "plugins": ["html", "vue", "javascript", "jsx", "typescript"],
+    "extensions": [".js", ".jsx", ".ts", ".tsx", ".vue"]
+  },
+  "eslint.validate": [
+    "javascript",
+    "typescript",
+    "reacttypescript",
+    "reactjavascript",
+    "html",
+    "vue"
+  ],
+
+  // "files.autoSave": "onFocusChange",
+  "prettier.trailingComma": "all",
+  "editor.detectIndentation": false,
+  "editor.tabSize": 2,
+  "editor.formatOnSave": true,
+  "prettier.singleQuote": false,
+  "editor.foldingImportsByDefault": true,
+  "editor.folding": true,
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true
+  },
+  "files.exclude": {
+    "**/.git": true,
+    "**/helm": true,
+    "**/.DS_Store": true,
+    "**/nginx": true,
+    "**/Dockerfile": true,
+    "**/Jenkinsfile": true
+  }
+}
