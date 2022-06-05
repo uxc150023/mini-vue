@@ -7,7 +7,7 @@ function cleanupEffect(effect) {
   }
   effect.deps.length = 0;
 }
-class ReactiveEffect {
+export class ReactiveEffect {
   // 这里表示在实例上新增active属性
   public parent = null; // 通过打标记的方式确认属性与effect的关联关系
   public deps = []; // 与当前effect有关的所有属性集合
@@ -69,14 +69,25 @@ export function track(target, type, key) {
   if (!dep) {
     depsMap.set(key, (dep = new Set()));
   }
+  trackEffects(dep);
+  // let shouldTrack = !dep.has(activeEffect); // 判断是否需要收集
+  // if (shouldTrack) {
+  //   dep.add(activeEffect);
+  //   activeEffect.deps.push(dep); // 让effect记录对应的dep，稍后清理的时候会用到
+  // }
 
-  let shouldTrack = !dep.has(activeEffect); // 判断是否需要收集
-  if (shouldTrack) {
-    dep.add(activeEffect);
-    activeEffect.deps.push(dep); // 让effect记录对应的dep，稍后清理的时候会用到
-  }
   // 对象的某个属性 -> 多个effect
   // weakMap = {对象: Map{name：Set}}
+}
+
+export function trackEffects(dep) {
+  if (activeEffect) {
+    let shouldTrack = !dep.has(activeEffect); // 判断是否需要收集
+    if (shouldTrack) {
+      dep.add(activeEffect);
+      activeEffect.deps.push(dep); // 让effect记录对应的dep，稍后清理的时候会用到
+    }
+  }
 }
 
 /**
@@ -93,16 +104,20 @@ export function trigger(target, type, key, value, oldValue) {
 
   let effects = depsMap.get(key); // 找到属性对应的effect
   if (effects) {
-    effects = new Set(effects);
-    effects.forEach((effect) => {
-      // 在执行effect的时候，避免执行当前正在执行的effect，不要无限调用，防止爆栈
-      if (effect !== activeEffect) {
-        if (effect.scheduler) {
-          effect.scheduler();
-        } else {
-          effect.run();
-        }
-      }
-    });
+    triggerEffects(effects);
   }
+}
+
+export function triggerEffects(effects) {
+  effects = new Set(effects);
+  effects.forEach((effect) => {
+    // 在执行effect的时候，避免执行当前正在执行的effect，不要无限调用，防止爆栈
+    if (effect !== activeEffect) {
+      if (effect.scheduler) {
+        effect.scheduler();
+      } else {
+        effect.run();
+      }
+    }
+  });
 }

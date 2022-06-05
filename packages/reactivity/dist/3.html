@@ -17,10 +17,22 @@
         lastName: "bin",
       });
 
-      const fullName = computed({
-        get() {},
-        set() {},
+      const fullName = computed(() => {
+        console.log("--->", "runner");
+        return state.firstName + " " + state.lastName;
       });
+      effect(() => {
+        app.innerHTML = fullName.value;
+      });
+
+      // const fullName = computed({
+      //   get() {},
+      //   set() {},
+      // });
+
+      setTimeout(() => {
+        state.firstName = "cyy";
+      }, 2000);
     </script>
   </body>
 </html>
