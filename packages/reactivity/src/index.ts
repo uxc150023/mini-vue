@@ -5,3 +5,4 @@ export { watch } from "./watch";
 export { ref } from "./ref";
 export { toRefs } from "./ref";
 export { toRef } from "./ref";
+export { proxyRefs } from "./ref";
