@@ -15,11 +15,12 @@ export function h(type, propsChildren, children) {
   if (l === 2) {
     if (isObject(propsChildren) && !isArray(propsChildren)) {
       if (isVnode(propsChildren)) {
-        createVnode(type, null, [propsChildren]);
+        // 虚拟节点包装成数组
+        return createVnode(type, null, [propsChildren]);
       }
-      return createVnode(type, propsChildren);
+      return createVnode(type, propsChildren); // 属性
     } else {
-      return createVnode(type, null, propsChildren);
+      return createVnode(type, null, propsChildren); // 是数组
     }
   } else {
     if (l > 3) {
@@ -28,6 +29,6 @@ export function h(type, propsChildren, children) {
       children = [children];
     }
     // 其他
-    return createVnode(type, children, propsChildren);
+    return createVnode(type, propsChildren, children);
   }
 }

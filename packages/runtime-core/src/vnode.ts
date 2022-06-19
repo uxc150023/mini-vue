@@ -1,13 +1,17 @@
 // type props children
 
 import { isArray, isString, ShapeFlags } from "@vue/shared";
-
+export const Text = Symbol("Text");
+export const Fragment = Symbol("Fragment");
 export function isVnode(value) {
   return !!(value && value.__v_isVnode);
 }
+export function isSameVnode(n1, n2) {
+  return n1.type === n2.type && n1.key === n2.key;
+}
 
 /**
- * 穿件虚拟dom
+ * 创建虚拟dom
  * @param type
  * @param props
  * @param children
@@ -21,8 +25,8 @@ export function createVnode(type, props, children = null) {
     type,
     props,
     children,
-    key: props?.["key"],
     el: null, // 虚拟节点上对应的真实节点，后续diff算法
+    key: props?.["key"],
     __v_isVnode: true,
     shapeFlag,
   };

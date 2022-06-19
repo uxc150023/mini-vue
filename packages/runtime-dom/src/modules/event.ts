@@ -1,8 +1,8 @@
 function createInvoker(callback) {
   const invoker = (e) => {
-    invoker.value(e);
+    return invoker.value(e);
   };
-  invoker.value = callback();
+  invoker.value = callback;
   return invoker;
 }
 export function patchEvent(el, eventName, nextValue) {
