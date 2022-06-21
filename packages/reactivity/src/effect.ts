@@ -12,7 +12,7 @@ export class ReactiveEffect {
   public parent = null; // 通过打标记的方式确认属性与effect的关联关系
   public deps = []; // 与当前effect有关的所有属性集合
   public active: boolean = true; // effect默认激活状态
-  constructor(public fn, public scheduler) {}
+  constructor(public fn, public scheduler?) {}
   // 执行effect
   run() {
     // 非激活状态，只需要执行函数，不需要进行依赖收集

@@ -1,6 +1,6 @@
 // type props children
 
-import { isArray, isString, ShapeFlags } from "@vue/shared";
+import { isArray, isObject, isString, ShapeFlags } from "@vue/shared";
 export const Text = Symbol("Text");
 export const Fragment = Symbol("Fragment");
 export function isVnode(value) {
@@ -19,7 +19,11 @@ export function isSameVnode(n1, n2) {
  */
 export function createVnode(type, props, children = null) {
   // 组合方案 shapeFlag 想知道一个元素中包含的是多个儿子还是一个儿子
-  let shapeFlag = isString(type) ? ShapeFlags.ELEMENT : 0;
+  let shapeFlag = isString(type)
+    ? ShapeFlags.ELEMENT
+    : isObject(type)
+    ? ShapeFlags.STATEFUL_COMPONENT
+    : 0;
   // 虚拟DOM就是一个对象，diff算法，真实DOM属性比较多
   const vnode = {
     type,

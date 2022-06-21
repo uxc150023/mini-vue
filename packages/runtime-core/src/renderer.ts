@@ -1,4 +1,7 @@
+import { reactive } from "@vue/reactivity";
 import { isString, ShapeFlags } from "@vue/shared";
+import { ReactiveEffect } from "packages/reactivity/src/effect";
+import { queueJob } from "./scheduler";
 import { getSequence } from "./sequence";
 import { createVnode, Fragment, isSameVnode, Text } from "./vnode";
 
@@ -259,6 +262,54 @@ export function createRenderer(renderOptions) {
       patchChildren(n1, n2, container);
     }
   };
+  const mountComponent = (vnode, container, anchor) => {
+    let { data = () => {}, render } = vnode.type;
+    const state = reactive(data());
+    // 组件实例
+    const instance = {
+      state,
+      vnode,
+      subTree: null,
+      isMounted: false,
+      update: null,
+    };
+    // 区分是初始化 还是要更新
+    const componentUpdateFn = () => {
+      if (!instance.isMounted) {
+        const subTree = render.call(state); // 作为this，后续this会改
+        patch(null, subTree, container, anchor); // 创建了subTree的真实节点并且插入
+        instance.subTree = subTree;
+        instance.isMounted = true;
+      } else {
+        // 组件内部更新
+        const subTree = render.call(state);
+        patch(instance.subTree, subTree, container, anchor);
+        instance.subTree = subTree;
+      }
+    };
+    // 组件异步更新
+    const effect = new ReactiveEffect(componentUpdateFn, () =>
+      queueJob(instance.update),
+    );
+    // 让组件强制更新的逻辑保存到组件的实例上，后续使用
+    let update = (instance.update = effect.run.bind(effect));
+    update();
+  };
+
+  /**
+   * 统一处理组件，里面区分普通组件 还是 函数式组件
+   * @param n1
+   * @param n2
+   * @param container
+   * @param anchor
+   */
+  const processComponent = (n1, n2, container, anchor) => {
+    if (n1 == null) {
+      mountComponent(n2, container, anchor);
+    } else {
+      // 组件更新靠props
+    }
+  };
 
   /**
    * 核心patch方法
@@ -283,6 +334,8 @@ export function createRenderer(renderOptions) {
       default:
         if (shapeFlag & ShapeFlags.ELEMENT) {
           processElement(n1, n2, container, anchor);
+        } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+          processComponent(n1, n2, container, anchor);
         }
         break;
     }
