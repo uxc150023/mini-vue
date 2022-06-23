@@ -17,6 +17,16 @@ export const isArray = Array.isArray;
 
 export const assign = Object.assign;
 
+const hasOwnProperty = Object.prototype.hasOwnProperty;
+/**
+ * 当前对象value有没有key属性
+ * @param value
+ * @param key
+ */
+export const hasOwn = (value, key) => {
+  return hasOwnProperty.call(value, key);
+};
+
 export const enum ShapeFlags {
   ELEMENT = 1,
   FUNCTIONAL_COMPONENT = 1 << 1,

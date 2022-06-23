@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script src="./runtime-dom.global.js"></script>
+    <!-- <script src="../../../node_modules/@vue/runtime-dom/dist/runtime-dom.global.js"></script> -->
+    <div id="app">123</div>
+    <script>
+      let { createRenderer, h, render, Text, Fragment } = VueRuntimeDOM;
+      const VueComponent = {
+        props: {
+          address: String, // 校验属性类型
+          c: {},
+        },
+        render() {
+          setTimeout(() => {}, 1000);
+          return h("p", [this.address, this.$attrs.a, this.$attrs.b, this.c.n]);
+        },
+      };
+      // props（用户接收的） attrs（用户没有接收的）
+      render(
+        h(VueComponent, { address: "凯德", a: 1, b: 2, c: { n: 1 } }),
+        app,
+      );
+    </script>
+  </body>
+</html>

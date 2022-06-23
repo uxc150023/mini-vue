@@ -1,6 +1,7 @@
 import { reactive } from "@vue/reactivity";
-import { isString, ShapeFlags } from "@vue/shared";
+import { hasOwn, isString, ShapeFlags } from "@vue/shared";
 import { ReactiveEffect } from "packages/reactivity/src/effect";
+import { createCommentInstance, setupComponent } from "./component";
 import { queueJob } from "./scheduler";
 import { getSequence } from "./sequence";
 import { createVnode, Fragment, isSameVnode, Text } from "./vnode";
@@ -262,27 +263,28 @@ export function createRenderer(renderOptions) {
       patchChildren(n1, n2, container);
     }
   };
+
   const mountComponent = (vnode, container, anchor) => {
-    let { data = () => {}, render } = vnode.type;
-    const state = reactive(data());
-    // 组件实例
-    const instance = {
-      state,
-      vnode,
-      subTree: null,
-      isMounted: false,
-      update: null,
-    };
+    // 1. 创建组件实例
+    let instance = (vnode.component = createCommentInstance(vnode));
+    // 2. 给组件实例赋值
+    setupComponent(instance);
+    // 3. 创建一个effect
+    setupRenderEffect(instance, container, anchor);
+  };
+
+  const setupRenderEffect = (instance, container, anchor) => {
+    const { render } = instance;
     // 区分是初始化 还是要更新
     const componentUpdateFn = () => {
       if (!instance.isMounted) {
-        const subTree = render.call(state); // 作为this，后续this会改
+        const subTree = render.call(instance.proxy); // 作为this，后续this会改
         patch(null, subTree, container, anchor); // 创建了subTree的真实节点并且插入
         instance.subTree = subTree;
         instance.isMounted = true;
       } else {
         // 组件内部更新
-        const subTree = render.call(state);
+        const subTree = render.call(instance.proxy);
         patch(instance.subTree, subTree, container, anchor);
         instance.subTree = subTree;
       }
