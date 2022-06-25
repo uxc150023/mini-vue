@@ -2,6 +2,7 @@ import { reactive } from "@vue/reactivity";
 import { hasOwn, isString, ShapeFlags } from "@vue/shared";
 import { ReactiveEffect } from "packages/reactivity/src/effect";
 import { createCommentInstance, setupComponent } from "./component";
+import { hasPropsChanged, updateProps } from "./componentProps";
 import { queueJob } from "./scheduler";
 import { getSequence } from "./sequence";
 import { createVnode, Fragment, isSameVnode, Text } from "./vnode";
@@ -273,6 +274,12 @@ export function createRenderer(renderOptions) {
     setupRenderEffect(instance, container, anchor);
   };
 
+  const updateComponentPreRender = (instance, next) => {
+    instance.next = null;
+    instance.vnode = next; // 实例上最新的节点
+    updateProps(instance.props, next.props);
+  };
+
   const setupRenderEffect = (instance, container, anchor) => {
     const { render } = instance;
     // 区分是初始化 还是要更新
@@ -284,6 +291,12 @@ export function createRenderer(renderOptions) {
         instance.isMounted = true;
       } else {
         // 组件内部更新
+        let { next } = instance;
+        if (next) {
+          // 更新前 拿到最新属性
+          updateComponentPreRender(instance, next);
+        }
+
         const subTree = render.call(instance.proxy);
         patch(instance.subTree, subTree, container, anchor);
         instance.subTree = subTree;
@@ -298,6 +311,26 @@ export function createRenderer(renderOptions) {
     update();
   };
 
+  const shouldUpdateComponent = (n1, n2) => {
+    const { props: prevProps, children: prevChildren } = n1;
+    const { props: nextProps, children: nextChildren } = n2;
+    if (prevProps === nextProps) return false;
+    return hasPropsChanged(prevProps, nextProps);
+  };
+
+  const updateComponent = (n1, n2) => {
+    // instance.props 是响应式的，而且可以更改， 属性的更新会导致页面从新渲染
+    // 对于元素而言，复用的是DOM节点，对于组件来说复用的是实例
+    const instance = (n2.component = n1.component);
+
+    // updateProps(instance, prevProps, nextProps); //属性更新
+    // 需要更新就强制调用组件update
+    if (shouldUpdateComponent(n1, n2)) {
+      instance.next = n2; // 新的虚拟节点放在next属性上
+      instance.update();
+    }
+  };
+
   /**
    * 统一处理组件，里面区分普通组件 还是 函数式组件
    * @param n1
@@ -310,6 +343,7 @@ export function createRenderer(renderOptions) {
       mountComponent(n2, container, anchor);
     } else {
       // 组件更新靠props
+      updateComponent(n1, n2);
     }
   };
 
